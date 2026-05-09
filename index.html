@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Channels</title>
+</head>
+<body>
+
+<p id="status">Loading...</p>
+
+<hr>
+
+<p>
+  <b>Channel One</b><br>
+  Total views: <span id="tv0">...</span><br>
+  Views today: <span id="dv0">...</span><br>
+  Subs gained: <span id="ds0">...</span>
+</p>
+
+<hr>
+
+<p>
+  <b>Channel Two</b><br>
+  Total views: <span id="tv1">...</span><br>
+  Views today: <span id="dv1">...</span><br>
+  Subs gained: <span id="ds1">...</span>
+</p>
+
+<hr>
+
+<p>
+  <b>Total</b><br>
+  Views: <span id="totV">...</span><br>
+  Views today: <span id="totDV">...</span><br>
+  Subs gained: <span id="totDS">...</span>
+</p>
+
+<script>
+  const CONFIG = {
+    apiKey: 'AIzaSyBTnIm3Nje9W92CB46TZMrbBVPt_AF8YH0',
+    channels: [
+      { id: 'UCM38JM65WSWY5fQcUeHa6WQ', name: 'Mythic' },
+      { id: 'CHANNEL_ID_2', name: 'Channel Two' },
+    ]
+  };
+
+  const SNAP_KEY = 'yt_snap';
+
+  function today() { return new Date().toISOString().slice(0, 10); }
+  function loadSnap() { try { return JSON.parse(localStorage.getItem(SNAP_KEY)); } catch { return null; } }
+  function saveSnap(d) { localStorage.setItem(SNAP_KEY, JSON.stringify({ date: today(), data: d })); }
+
+  async function run() {
+    const snap     = loadSnap();
+    const isNewDay = !snap || snap.date !== today();
+    const baseline = snap ? snap.data : null;
+
+    let netV = 0, netS = 0, netDV = 0, netDS = 0, hasDelta = false;
+    const fresh = {};
+
+    for (let i = 0; i < CONFIG.channels.length; i++) {
+      const ch = CONFIG.channels[i];
+      const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${ch.id}&key=${CONFIG.apiKey}`;
+      const data = await fetch(url).then(r => r.json());
+      const s = data.items[0].statistics;
+      const views = parseInt(s.viewCount, 10);
+      const subs  = parseInt(s.subscriberCount, 10);
+      fresh[ch.id] = { views, subs };
+
+      const base   = baseline?.[ch.id] ?? null;
+      const deltaV = base !== null ? views - base.views : null;
+      const deltaS = base !== null ? subs  - base.subs  : null;
+      if (deltaV !== null) hasDelta = true;
+
+      document.getElementById(`tv${i}`).textContent = views.toLocaleString();
+      document.getElementById(`dv${i}`).textContent = deltaV !== null ? (deltaV >= 0 ? '+' : '') + deltaV.toLocaleString() : 'check back tomorrow';
+      document.getElementById(`ds${i}`).textContent = deltaS !== null ? (deltaS >= 0 ? '+' : '') + deltaS.toLocaleString() : 'check back tomorrow';
+
+      netV += views; netS += subs;
+      if (deltaV !== null) netDV += deltaV;
+      if (deltaS !== null) netDS += deltaS;
+    }
+
+    if (isNewDay) saveSnap(fresh);
+
+    document.getElementById('totV').textContent  = netV.toLocaleString();
+    document.getElementById('totDV').textContent = hasDelta ? (netDV >= 0 ? '+' : '') + netDV.toLocaleString() : 'check back tomorrow';
+    document.getElementById('totDS').textContent = hasDelta ? (netDS >= 0 ? '+' : '') + netDS.toLocaleString() : 'check back tomorrow';
+    document.getElementById('status').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+  }
+
+  run();
+</script>
+</body>
+</html>
