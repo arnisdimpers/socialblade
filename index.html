@@ -7,14 +7,14 @@
 <body>
 
 <p id="status">Loading...</p>
-
 <hr>
 
 <p>
   <b>Channel One</b><br>
   Total views: <span id="tv0">...</span><br>
+  Total subs: <span id="subs0">...</span><br>
   Views today: <span id="dv0">...</span><br>
-  Subs gained: <span id="ds0">...</span>
+  Subs change: <span id="ds0">...</span>
 </p>
 
 <hr>
@@ -22,74 +22,145 @@
 <p>
   <b>Channel Two</b><br>
   Total views: <span id="tv1">...</span><br>
+  Total subs: <span id="subs1">...</span><br>
   Views today: <span id="dv1">...</span><br>
-  Subs gained: <span id="ds1">...</span>
+  Subs change: <span id="ds1">...</span>
 </p>
 
 <hr>
 
 <p>
-  <b>Total</b><br>
+  <b>Network total</b><br>
   Views: <span id="totV">...</span><br>
   Views today: <span id="totDV">...</span><br>
-  Subs gained: <span id="totDS">...</span>
+  Subs change: <span id="totDS">...</span>
 </p>
 
 <script>
+  /* ══════════════════════════════════════════
+     CONFIG — fill in your values
+     ══════════════════════════════════════════ */
   const CONFIG = {
     apiKey: 'AIzaSyBTnIm3Nje9W92CB46TZMrbBVPt_AF8YH0',
     channels: [
-      { id: 'UCM38JM65WSWY5fQcUeHa6WQ', name: 'Mythic' },
-      { id: 'CHANNEL_ID_2', name: 'Channel Two' },
+      {
+        id:   'UCM38JM65WSWY5fQcUeHa6WQ',
+        name: 'Channel One',
+        seed: { views: 5639147, subs: 29500 }  // end-of-yesterday baseline
+      },
+      {
+        id:   'CHANNEL_ID_2',                   // ← fill in
+        name: 'Channel Two',
+        seed: { views: 0, subs: 0 }             // ← fill in yesterday's totals
+      },
     ]
   };
+  /* ══════════════════════════════════════════ */
 
-  const SNAP_KEY = 'yt_snap';
+  const SNAP_KEY = 'yt_snap_v4';
 
-  function today() { return new Date().toISOString().slice(0, 10); }
-  function loadSnap() { try { return JSON.parse(localStorage.getItem(SNAP_KEY)); } catch { return null; } }
-  function saveSnap(d) { localStorage.setItem(SNAP_KEY, JSON.stringify({ date: today(), data: d })); }
+  function todayStr() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function loadSnap() {
+    try { return JSON.parse(localStorage.getItem(SNAP_KEY)); }
+    catch { return null; }
+  }
+
+  // Save snapshot only once per day (first visit of the day)
+  function maybeSaveSnap(fresh) {
+    const snap = loadSnap();
+    if (!snap || snap.date !== todayStr()) {
+      localStorage.setItem(SNAP_KEY, JSON.stringify({ date: todayStr(), data: fresh }));
+    }
+  }
+
+  function fmt(n, showSign = false) {
+    if (n === null || n === undefined) return '—';
+    const s = Math.abs(n).toLocaleString();
+    if (!showSign) return s;
+    return (n >= 0 ? '+' : '-') + s;
+  }
+
+  async function fetchChannel(id, apiKey) {
+    const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${id}&key=${apiKey}`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    if (!data.items?.length) throw new Error('Channel not found: ' + id);
+    const s = data.items[0].statistics;
+    return {
+      views: parseInt(s.viewCount, 10),
+      subs:  parseInt(s.subscriberCount, 10),
+    };
+  }
 
   async function run() {
-    const snap     = loadSnap();
-    const isNewDay = !snap || snap.date !== today();
-    const baseline = snap ? snap.data : null;
-
-    let netV = 0, netS = 0, netDV = 0, netDS = 0, hasDelta = false;
-    const fresh = {};
+    const snap    = loadSnap();
+    const isNewDay = !snap || snap.date !== todayStr();
+    const fresh   = {};
+    let totV = 0, totDV = 0, totDS = 0;
 
     for (let i = 0; i < CONFIG.channels.length; i++) {
       const ch = CONFIG.channels[i];
-      const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${ch.id}&key=${CONFIG.apiKey}`;
-      const data = await fetch(url).then(r => r.json());
-      const s = data.items[0].statistics;
-      const views = parseInt(s.viewCount, 10);
-      const subs  = parseInt(s.subscriberCount, 10);
-      fresh[ch.id] = { views, subs };
+      try {
+        const current = await fetchChannel(ch.id, CONFIG.apiKey);
+        fresh[ch.id]  = current;
 
-      const base   = baseline?.[ch.id] ?? null;
-      const deltaV = base !== null ? views - base.views : null;
-      const deltaS = base !== null ? subs  - base.subs  : null;
-      if (deltaV !== null) hasDelta = true;
+        // Baseline: prefer localStorage snapshot; fall back to hardcoded seed
+        const base = snap?.data?.[ch.id] ?? ch.seed;
 
-      document.getElementById(`tv${i}`).textContent = views.toLocaleString();
-      document.getElementById(`dv${i}`).textContent = deltaV !== null ? (deltaV >= 0 ? '+' : '') + deltaV.toLocaleString() : 'check back tomorrow';
-      document.getElementById(`ds${i}`).textContent = deltaS !== null ? (deltaS >= 0 ? '+' : '') + deltaS.toLocaleString() : 'check back tomorrow';
+        const deltaV = current.views - base.views;
+        const deltaS = current.subs  - base.subs;
 
-      netV += views; netS += subs;
-      if (deltaV !== null) netDV += deltaV;
-      if (deltaS !== null) netDS += deltaS;
+        let displayDeltaV = deltaV;
+        if (deltaV === 0) {
+          const saved = localStorage.getItem('yt_delta_v4_' + ch.id);
+          if (saved) displayDeltaV = parseInt(saved);
+        } else {
+          localStorage.setItem('yt_delta_v4_' + ch.id, deltaV);
+        }
+
+        let displayDeltaS = deltaS;
+        if (deltaS === 0) {
+          const saved = localStorage.getItem('yt_delta_s4_' + ch.id);
+          if (saved) displayDeltaS = parseInt(saved);
+        } else {
+          localStorage.setItem('yt_delta_s4_' + ch.id, deltaS);
+        }
+
+        document.getElementById(`tv${i}`).textContent   = fmt(current.views);
+        document.getElementById(`subs${i}`).textContent = fmt(current.subs);
+        document.getElementById(`dv${i}`).textContent   = fmt(displayDeltaV, true);
+        document.getElementById(`ds${i}`).textContent   = fmt(displayDeltaS, true);
+
+        totV  += current.views;
+        totDV += displayDeltaV;
+        totDS += displayDeltaS;
+
+      } catch (err) {
+        ['tv','subs','dv','ds'].forEach(p => {
+          document.getElementById(`${p}${i}`).textContent = 'error';
+        });
+        console.error(ch.id, err.message);
+      }
     }
 
-    if (isNewDay) saveSnap(fresh);
+    // Save snapshot — only overwrites when it's a new day
+    maybeSaveSnap(fresh);
 
-    document.getElementById('totV').textContent  = netV.toLocaleString();
-    document.getElementById('totDV').textContent = hasDelta ? (netDV >= 0 ? '+' : '') + netDV.toLocaleString() : 'check back tomorrow';
-    document.getElementById('totDS').textContent = hasDelta ? (netDS >= 0 ? '+' : '') + netDS.toLocaleString() : 'check back tomorrow';
-    document.getElementById('status').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+    document.getElementById('totV').textContent  = fmt(totV);
+    document.getElementById('totDV').textContent = fmt(totDV, true);
+    document.getElementById('totDS').textContent = fmt(totDS, true);
+    document.getElementById('status').textContent =
+      'Updated: ' + new Date().toLocaleTimeString() +
+      (isNewDay ? ' · new day snapshot saved' : ' · comparing to today\'s first load');
   }
 
   run();
 </script>
 </body>
 </html>
+<script>
+
