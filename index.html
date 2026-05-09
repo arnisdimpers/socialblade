@@ -4,37 +4,23 @@
   <meta charset="UTF-8" />
   <title>Channels</title>
 </head>
-<body>
-
-<p id="status">Loading...</p>
-<hr>
-
-<p>
-  <b>Channel One</b><br>
-  Total views: <span id="tv0">...</span><br>
-  Total subs: <span id="subs0">...</span><br>
-  Views today: <span id="dv0">...</span><br>
-  Subs change: <span id="ds0">...</span>
-</p>
-
-<hr>
-
-<p>
-  <b>Channel Two</b><br>
-  Total views: <span id="tv1">...</span><br>
-  Total subs: <span id="subs1">...</span><br>
-  Views today: <span id="dv1">...</span><br>
-  Subs change: <span id="ds1">...</span>
-</p>
-
-<hr>
-
-<p>
-  <b>Network total</b><br>
-  Views: <span id="totV">...</span><br>
-  Views today: <span id="totDV">...</span><br>
-  Subs change: <span id="totDS">...</span>
-</p>
+<body style="font-family: Arial; font-size: 13px; margin: 10px; line-height: 1.4;">
+<p id="status" style="margin: 0 0 8px; font-size: 12px; color: #666;">Loading...</p>
+<div style="border-top: 1px solid #999; padding: 8px 0;">
+  <b>Project</b> Assets: <span id="totDV">...</span> | Profit: $<span id="totEarned">...</span>
+</div>
+<div style="border-top: 1px solid #999; padding: 8px 0;">
+  <b>Lobby</b> <span id="dv0">...</span> (<span id="earn0">...</span>) <span id="ds0">...</span>
+</div>
+<div style="border-top: 1px solid #999; padding: 8px 0;">
+  <b>Blake</b> <span id="dv1">...</span> (<span id="earn1">...</span>) <span id="ds1">...</span>
+</div>
+<div style="border-top: 1px solid #999; padding: 8px 0;">
+  <b>Mythic</b> <span id="dv2">...</span> (<span id="earn2">...</span>)
+</div>
+<div style="border-top: 1px solid #999; padding: 8px 0;">
+  <b>Ender</b> <span id="dv3">...</span> (<span id="earn3">...</span>)
+</div>
 
 <script>
   /* ══════════════════════════════════════════
@@ -44,14 +30,24 @@
     apiKey: 'AIzaSyBTnIm3Nje9W92CB46TZMrbBVPt_AF8YH0',
     channels: [
       {
-        id:   'UCM38JM65WSWY5fQcUeHa6WQ',
-        name: 'Channel One',
-        seed: { views: 5639147, subs: 29500 }  // end-of-yesterday baseline
+        id:   'UCVpdV2VqLfaQjfyKfgCygaQ',
+        name: 'Lobby',
+        seed: { views: 717710, subs: 6680 }
       },
       {
-        id:   'CHANNEL_ID_2',                   // ← fill in
-        name: 'Channel Two',
-        seed: { views: 0, subs: 0 }             // ← fill in yesterday's totals
+        id:   'UCt85dLiFJws8eyjpcIoNLfQ',
+        name: 'Blake',
+        seed: { views: 5255, subs: 126 }
+      },
+      {
+        id:   'UCM38JM65WSWY5fQcUeHa6WQ',
+        name: 'Mythic',
+        seed: { views: 5639147, subs: 29500 }
+      },
+      {
+        id:   'UCSeNFfn71yjTA1lo_xeWt4w',
+        name: 'Ender',
+        seed: { views: 8895005, subs: 0 }
       },
     ]
   };
@@ -100,7 +96,7 @@
     const snap    = loadSnap();
     const isNewDay = !snap || snap.date !== todayStr();
     const fresh   = {};
-    let totV = 0, totDV = 0, totDS = 0;
+    let totDV = 0;
 
     for (let i = 0; i < CONFIG.channels.length; i++) {
       const ch = CONFIG.channels[i];
@@ -130,19 +126,28 @@
           localStorage.setItem('yt_delta_s4_' + ch.id, deltaS);
         }
 
-        document.getElementById(`tv${i}`).textContent   = fmt(current.views);
-        document.getElementById(`subs${i}`).textContent = fmt(current.subs);
         document.getElementById(`dv${i}`).textContent   = fmt(displayDeltaV, true);
-        document.getElementById(`ds${i}`).textContent   = fmt(displayDeltaS, true);
+        const earnedIndividual = Math.round((displayDeltaV * 6) / 1000);
+        document.getElementById(`earn${i}`).textContent = earnedIndividual;
+        
+        // Display subs changes only for Lobby (i=0) and Blake (i=1)
+        if (i === 0 || i === 1) {
+          document.getElementById(`ds${i}`).textContent   = fmt(displayDeltaS, true);
+        }
 
-        totV  += current.views;
         totDV += displayDeltaV;
-        totDS += displayDeltaS;
 
       } catch (err) {
-        ['tv','subs','dv','ds'].forEach(p => {
+        ['dv'].forEach(p => {
           document.getElementById(`${p}${i}`).textContent = 'error';
         });
+        if (i === 0 || i === 1) {
+          ['subs','ds'].forEach(p => {
+            if (document.getElementById(`${p}${i}`)) {
+              document.getElementById(`${p}${i}`).textContent = 'error';
+            }
+          });
+        }
         console.error(ch.id, err.message);
       }
     }
@@ -150,17 +155,14 @@
     // Save snapshot — only overwrites when it's a new day
     maybeSaveSnap(fresh);
 
-    document.getElementById('totV').textContent  = fmt(totV);
     document.getElementById('totDV').textContent = fmt(totDV, true);
-    document.getElementById('totDS').textContent = fmt(totDS, true);
+    document.getElementById('totEarned').textContent = fmt((totDV * 6) / 1000, false);
+    const snapshotDate = snap ? snap.date : '2026-05-08';
     document.getElementById('status').textContent =
-      'Updated: ' + new Date().toLocaleTimeString() +
-      (isNewDay ? ' · new day snapshot saved' : ' · comparing to today\'s first load');
+      'Last snapshot: ' + snapshotDate + ' · Updated: ' + new Date().toLocaleTimeString();
   }
 
   run();
 </script>
 </body>
 </html>
-<script>
-
