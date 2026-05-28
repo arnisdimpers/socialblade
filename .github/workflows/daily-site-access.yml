@@ -1,0 +1,21 @@
+name: Daily Site Access
+
+on:
+  schedule:
+    # Run at 1 AM Japanese Time (4 PM UTC) every day
+    - cron: '0 16 * * *'
+  workflow_dispatch:
+
+jobs:
+  access-site:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Access website
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://arnisdimpers.github.io/socialblade/)
+          echo "Website status: $response"
+          if [ "$response" -ne 200 ]; then
+            echo "Warning: Expected 200, got $response"
+            exit 1
+          fi
+          echo "✓ Site accessed successfully"
