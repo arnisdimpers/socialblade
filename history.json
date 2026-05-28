@@ -1,0 +1,45 @@
+{
+  "totalAccess": 0,
+  "channels": [
+    {
+      "id": "UCVpdV2VqLfaQjfyKfgCygaQ",
+      "name": "Lobby",
+      "seed": {
+        "views": 710710,
+        "subs": 6680,
+        "viewsToday": -7000,
+        "subsToday": 0
+      }
+    },
+    {
+      "id": "UCt85dLiFJws8eyjpcIoNLfQ",
+      "name": "Blake",
+      "seed": {
+        "views": 5255,
+        "subs": 126,
+        "viewsToday": 0,
+        "subsToday": 0
+      }
+    },
+    {
+      "id": "UCM38JM65WSWY5fQcUeHa6WQ",
+      "name": "Mythic",
+      "seed": {
+        "views": 5639147,
+        "subs": 29500,
+        "viewsToday": 0,
+        "subsToday": 0
+      }
+    },
+    {
+      "id": "UCSeNFfn71yjTA1lo_xeWt4w",
+      "name": "Ender",
+      "seed": {
+        "views": 8895005,
+        "subs": 0,
+        "viewsToday": 0,
+        "subsToday": 0
+      }
+    }
+  ]
+}
