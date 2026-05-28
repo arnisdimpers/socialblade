@@ -7,53 +7,86 @@
 <body style="font-family: Arial; font-size: 13px; margin: 10px; line-height: 1.4;">
 <p id="status" style="margin: 0 0 8px; font-size: 12px; color: #666;">Loading...</p>
 <div style="border-top: 1px solid #999; padding: 8px 0;">
-  <b>Project</b> Assets: <span id="totDV">...</span> | Profit: $<span id="totEarned">...</span>
+  <b>Project</b> Total Views: <span id="totDV">...</span> | Total Profit: $<span id="totEarned">...</span> | Today's Views: <span id="todayViews">...</span> | Today's Earnings: $<span id="todayEarned">...</span>
 </div>
-<div style="border-top: 1px solid #999; padding: 8px 0;">
-  <b>Lobby</b> <span id="dv0">...</span> (<span id="earn0">...</span>) <span id="ds0">...</span>
+
+<div style="border-top: 1px solid #999; padding: 12px 0;">
+  <div style="font-weight: bold; margin-bottom: 8px;"><span id="name0">Lobby</span></div>
+  <div>Total Views: <span id="tv0">...</span></div>
+  <div>Total Subs: <span id="ts0">...</span></div>
+  <div>Today Views: <span id="vt0" style="color: #0066cc;">...</span></div>
+  <div>Today Subs: <span id="st0" style="color: #0066cc;">...</span></div>
+  <div style="margin-top: 4px; font-size: 11px; color: #666;">Earned: $<span id="earn0">...</span></div>
 </div>
-<div style="border-top: 1px solid #999; padding: 8px 0;">
-  <b>Blake</b> <span id="dv1">...</span> (<span id="earn1">...</span>) <span id="ds1">...</span>
+
+<div style="border-top: 1px solid #999; padding: 12px 0;">
+  <div style="font-weight: bold; margin-bottom: 8px;"><span id="name1">Blake</span></div>
+  <div>Total Views: <span id="tv1">...</span></div>
+  <div>Total Subs: <span id="ts1">...</span></div>
+  <div>Today Views: <span id="vt1" style="color: #0066cc;">...</span></div>
+  <div>Today Subs: <span id="st1" style="color: #0066cc;">...</span></div>
+  <div style="margin-top: 4px; font-size: 11px; color: #666;">Earned: $<span id="earn1">...</span></div>
 </div>
-<div style="border-top: 1px solid #999; padding: 8px 0;">
-  <b>Mythic</b> <span id="dv2">...</span> (<span id="earn2">...</span>)
+
+<div style="border-top: 1px solid #999; padding: 12px 0;">
+  <div style="font-weight: bold; margin-bottom: 8px;"><span id="name2">Mythic</span></div>
+  <div>Total Views: <span id="tv2">...</span></div>
+  <div>Total Subs: <span id="ts2">...</span></div>
+  <div>Today Views: <span id="vt2" style="color: #0066cc;">...</span></div>
+  <div>Today Subs: <span id="st2" style="color: #0066cc;">...</span></div>
+  <div style="margin-top: 4px; font-size: 11px; color: #666;">Earned: $<span id="earn2">...</span></div>
 </div>
-<div style="border-top: 1px solid #999; padding: 8px 0;">
-  <b>Ender</b> <span id="dv3">...</span> (<span id="earn3">...</span>)
+
+<div style="border-top: 1px solid #999; padding: 12px 0;">
+  <div style="font-weight: bold; margin-bottom: 8px;"><span id="name3">Ender</span></div>
+  <div>Total Views: <span id="tv3">...</span></div>
+  <div>Total Subs: <span id="ts3">...</span></div>
+  <div>Today Views: <span id="vt3" style="color: #0066cc;">...</span></div>
+  <div>Today Subs: <span id="st3" style="color: #0066cc;">...</span></div>
+  <div style="margin-top: 4px; font-size: 11px; color: #666;">Earned: $<span id="earn3">...</span></div>
 </div>
 
 <script>
   /* ══════════════════════════════════════════
-     CONFIG — fill in your values
+     CONFIG — API Key
      ══════════════════════════════════════════ */
   const CONFIG = {
-    apiKey: 'AIzaSyBTnIm3Nje9W92CB46TZMrbBVPt_AF8YH0',
-    channels: [
-      {
-        id:   'UCVpdV2VqLfaQjfyKfgCygaQ',
-        name: 'Lobby',
-        seed: { views: 717710, subs: 6680 }
-      },
-      {
-        id:   'UCt85dLiFJws8eyjpcIoNLfQ',
-        name: 'Blake',
-        seed: { views: 5255, subs: 126 }
-      },
-      {
-        id:   'UCM38JM65WSWY5fQcUeHa6WQ',
-        name: 'Mythic',
-        seed: { views: 5639147, subs: 29500 }
-      },
-      {
-        id:   'UCSeNFfn71yjTA1lo_xeWt4w',
-        name: 'Ender',
-        seed: { views: 8895005, subs: 0 }
-      },
-    ]
+    apiKey: 'AIzaSyBTnIm3Nje9W92CB46TZMrbBVPt_AF8YH0'
   };
+  
+  let channelsData = [];
+  let historyData = {};
+  
+  async function loadHistory() {
+    try {
+      const response = await fetch('history.json');
+      const data = await response.json();
+      historyData = data;
+      channelsData = data.channels;
+      return channelsData;
+    } catch (err) {
+      console.error('Failed to load history.json:', err);
+      return [];
+    }
+  }
+
+  async function saveHistory() {
+    try {
+      const dataToSave = {
+        totalAccess: historyData.totalAccess || 0,
+        channels: channelsData
+      };
+      // Send to server or update localStorage as backup
+      localStorage.setItem('yt_history_backup', JSON.stringify(dataToSave));
+      console.log('History backup saved to localStorage');
+    } catch (err) {
+      console.error('Failed to save history:', err);
+    }
+  }
   /* ══════════════════════════════════════════ */
 
   const SNAP_KEY = 'yt_snap_v4';
+  const ACCESS_COUNTER_KEY = 'yt_access_counter';
 
   function todayStr() {
     return new Date().toISOString().slice(0, 10);
@@ -92,20 +125,39 @@
     };
   }
 
+  function incrementAccessCounter() {
+    let count = parseInt(localStorage.getItem(ACCESS_COUNTER_KEY) || '0', 10);
+    count++;
+    localStorage.setItem(ACCESS_COUNTER_KEY, count.toString());
+    return count;
+  }
+
   async function run() {
     const snap    = loadSnap();
     const isNewDay = !snap || snap.date !== todayStr();
     const fresh   = {};
     let totDV = 0;
 
-    for (let i = 0; i < CONFIG.channels.length; i++) {
-      const ch = CONFIG.channels[i];
+    for (let i = 0; i < channelsData.length; i++) {
+      const ch = channelsData[i];
       try {
         const current = await fetchChannel(ch.id, CONFIG.apiKey);
         fresh[ch.id]  = current;
 
-        // Baseline: prefer localStorage snapshot; fall back to hardcoded seed
-        const base = snap?.data?.[ch.id] ?? ch.seed;
+        // Calculate today's changes based on seed values
+        const viewsToday = current.views - ch.seed.views;
+        const subsToday = current.subs - ch.seed.subs;
+
+        // Update seed with today's changes
+        ch.seed.viewsToday = viewsToday;
+        ch.seed.subsToday = subsToday;
+        
+        // Update seed with new values
+        ch.seed.views = current.views;
+        ch.seed.subs = current.subs;
+
+        // Baseline: prefer localStorage snapshot; fall back to seed from history.json
+        const base = snap?.data?.[ch.id] ?? { views: current.views - viewsToday, subs: current.subs - subsToday };
 
         const deltaV = current.views - base.views;
         const deltaS = current.subs  - base.subs;
@@ -126,28 +178,24 @@
           localStorage.setItem('yt_delta_s4_' + ch.id, deltaS);
         }
 
-        document.getElementById(`dv${i}`).textContent   = fmt(displayDeltaV, true);
+        // Display channel info
+        document.getElementById(`name${i}`).textContent = ch.name;
+        document.getElementById(`tv${i}`).textContent = fmt(current.views);
+        document.getElementById(`ts${i}`).textContent = fmt(current.subs);
+        document.getElementById(`vt${i}`).textContent = fmt(viewsToday, true);
+        document.getElementById(`st${i}`).textContent = fmt(subsToday, true);
+        
         const earnedIndividual = Math.round((displayDeltaV * 6) / 1000);
         document.getElementById(`earn${i}`).textContent = earnedIndividual;
-        
-        // Display subs changes only for Lobby (i=0) and Blake (i=1)
-        if (i === 0 || i === 1) {
-          document.getElementById(`ds${i}`).textContent   = fmt(displayDeltaS, true);
-        }
 
         totDV += displayDeltaV;
 
       } catch (err) {
-        ['dv'].forEach(p => {
-          document.getElementById(`${p}${i}`).textContent = 'error';
-        });
-        if (i === 0 || i === 1) {
-          ['subs','ds'].forEach(p => {
-            if (document.getElementById(`${p}${i}`)) {
-              document.getElementById(`${p}${i}`).textContent = 'error';
-            }
-          });
-        }
+        document.getElementById(`tv${i}`).textContent = 'error';
+        document.getElementById(`ts${i}`).textContent = 'error';
+        document.getElementById(`vt${i}`).textContent = 'error';
+        document.getElementById(`st${i}`).textContent = 'error';
+        document.getElementById(`earn${i}`).textContent = 'error';
         console.error(ch.id, err.message);
       }
     }
@@ -155,14 +203,22 @@
     // Save snapshot — only overwrites when it's a new day
     maybeSaveSnap(fresh);
 
+    // Save updated seed values to history
+    await saveHistory();
+
     document.getElementById('totDV').textContent = fmt(totDV, true);
     document.getElementById('totEarned').textContent = fmt((totDV * 6) / 1000, false);
     const snapshotDate = snap ? snap.date : '2026-05-08';
+    const totalAccess = incrementAccessCounter();
     document.getElementById('status').textContent =
-      'Last snapshot: ' + snapshotDate + ' · Updated: ' + new Date().toLocaleTimeString();
+      'Last snapshot: ' + snapshotDate + ' · Total accesses: ' + totalAccess + ' · Updated: ' + new Date().toLocaleTimeString();
   }
 
-  run();
+  // Load history.json and run
+  (async () => {
+    await loadHistory();
+    run();
+  })();
 </script>
 </body>
 </html>
