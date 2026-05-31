@@ -6,6 +6,18 @@
     <!-- Firebase (Realtime Database) SDK - compat build for simple integration -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+      /* Header highlights */
+      #todayViews {
+        color: #0a7f3a; /* green */
+        font-weight: 700;
+      }
+      #todayEarned {
+        color: #0a7f3a; /* green */
+        font-weight: 700;
+        font-size: 14px; /* slightly larger than base */
+      }
+    </style>
   </head>
   <body
     style="font-family: Arial; font-size: 13px; margin: 10px; line-height: 1.4"
@@ -15,9 +27,12 @@
     </p>
     <div style="border-top: 1px solid #999; padding: 8px 0">
       <b>Project</b>
-      Views today: <span id="todayViews">...</span> | Revenue today (total of
-      all channels): $<span id="todayEarned">...</span> | Total views:
-      <span id="totalViews">...</span> | Total revenue: $<span id="totalRevenue"
+      Views today: <span id="todayViews">...</span> | Revenue today: $<span
+        id="todayEarned"
+        >...</span
+      >
+      | Total views: <span id="totalViews">...</span> | Total revenue: $<span
+        id="totalRevenue"
         >...</span
       >
     </div>
@@ -38,6 +53,27 @@
     <div style="border-top: 1px solid #999; padding: 12px 0">
       <div style="font-weight: bold; margin-bottom: 8px">
         <span id="name1">Blake</span>
+      </div>
+      <!-- Blake progress bar (shows 2/4 progress = 50%) -->
+      <div style="margin: 6px 0; display: flex; align-items: center; gap: 8px">
+        <div
+          style="
+            width: 140px;
+            height: 12px;
+            background: #eee;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+          "
+        >
+          <div
+            id="blakeProgress"
+            style="width: 50%; height: 100%; background: #0a7f3a"
+          ></div>
+        </div>
+        <div id="blakeProgressLabel" style="font-size: 12px; color: #333">
+          2/4
+        </div>
       </div>
       <div>Total Views: <span id="tv1">...</span></div>
       <div>Total Subs: <span id="ts1">...</span></div>
@@ -600,7 +636,23 @@
         const snapshotDateTimeDisplay = snapshotDateTimeISO
           ? fmtDateTime(snapshotDateTimeISO)
           : historyData.snapshotDate || snap?.date || "(none)";
-        const totalAccess = incrementAccessCounter();
+        // Prefer authoritative totalAccess from Firebase when available.
+        let totalAccess = incrementAccessCounter();
+        try {
+          if (db) {
+            const totalSnap = await db
+              .ref("/history/totalAccess")
+              .once("value");
+            if (totalSnap.exists()) {
+              totalAccess = Number(totalSnap.val());
+            }
+          }
+        } catch (e) {
+          console.warn(
+            "Failed to read totalAccess from DB, using local counter:",
+            e,
+          );
+        }
         console.log("run: finished.", {
           snapshotDate,
           snapshotDateTimeISO,
@@ -619,9 +671,57 @@
           new Date().toLocaleTimeString();
       }
 
-      // Load history.json and run
+      // Ensure graph values exist in DB and load them into the page
+      async function applyGraphValues() {
+        try {
+          // If DB is available and graph missing, initialize it to [2,4]
+          if (db) {
+            if (
+              !Array.isArray(historyData.graph) ||
+              historyData.graph.length < 2
+            ) {
+              historyData.graph = [2, 4];
+              try {
+                await db.ref("/history/graph").set(historyData.graph);
+                console.log(
+                  "applyGraphValues: initialized /history/graph to",
+                  historyData.graph,
+                );
+              } catch (e) {
+                console.warn(
+                  "applyGraphValues: failed to write graph to DB",
+                  e,
+                );
+              }
+            }
+          }
+
+          // Use graph from historyData if available, otherwise default to [2,4]
+          const graph =
+            Array.isArray(historyData.graph) && historyData.graph.length >= 2
+              ? historyData.graph
+              : [2, 4];
+
+          // Update Blake progress bar and label
+          const label = document.getElementById("blakeProgressLabel");
+          const bar = document.getElementById("blakeProgress");
+          if (label) label.textContent = `${graph[0]}/${graph[1]}`;
+          if (bar) {
+            const pct = Math.max(
+              0,
+              Math.min(100, (Number(graph[0]) / Number(graph[1] || 1)) * 100),
+            );
+            bar.style.width = pct + "%";
+          }
+        } catch (e) {
+          console.warn("applyGraphValues: error", e);
+        }
+      }
+
+      // Load history.json and run (apply graph defaults first)
       (async () => {
         await loadHistory();
+        await applyGraphValues();
         run();
       })();
     </script>
