@@ -1,224 +1,629 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <meta charset="UTF-8" />
-  <title>Channels</title>
-</head>
-<body style="font-family: Arial; font-size: 13px; margin: 10px; line-height: 1.4;">
-<p id="status" style="margin: 0 0 8px; font-size: 12px; color: #666;">Loading...</p>
-<div style="border-top: 1px solid #999; padding: 8px 0;">
-  <b>Project</b> Total Views: <span id="totDV">...</span> | Total Profit: $<span id="totEarned">...</span> | Today's Views: <span id="todayViews">...</span> | Today's Earnings: $<span id="todayEarned">...</span>
-</div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Channels</title>
+    <!-- Firebase (Realtime Database) SDK - compat build for simple integration -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  </head>
+  <body
+    style="font-family: Arial; font-size: 13px; margin: 10px; line-height: 1.4"
+  >
+    <p id="status" style="margin: 0 0 8px; font-size: 12px; color: #666">
+      Loading...
+    </p>
+    <div style="border-top: 1px solid #999; padding: 8px 0">
+      <b>Project</b>
+      Views today: <span id="todayViews">...</span> | Revenue today (total of
+      all channels): $<span id="todayEarned">...</span> | Total views:
+      <span id="totalViews">...</span> | Total revenue: $<span id="totalRevenue"
+        >...</span
+      >
+    </div>
 
-<div style="border-top: 1px solid #999; padding: 12px 0;">
-  <div style="font-weight: bold; margin-bottom: 8px;"><span id="name0">Lobby</span></div>
-  <div>Total Views: <span id="tv0">...</span></div>
-  <div>Total Subs: <span id="ts0">...</span></div>
-  <div>Today Views: <span id="vt0" style="color: #0066cc;">...</span></div>
-  <div>Today Subs: <span id="st0" style="color: #0066cc;">...</span></div>
-  <div style="margin-top: 4px; font-size: 11px; color: #666;">Earned: $<span id="earn0">...</span></div>
-</div>
+    <div style="border-top: 1px solid #999; padding: 12px 0">
+      <div style="font-weight: bold; margin-bottom: 8px">
+        <span id="name0">Lobby</span>
+      </div>
+      <div>Total Views: <span id="tv0">...</span></div>
+      <div>Total Subs: <span id="ts0">...</span></div>
+      <div>Today Views: <span id="vt0" style="color: #0066cc">...</span></div>
+      <div>Today Subs: <span id="st0" style="color: #0066cc">...</span></div>
+      <div style="margin-top: 4px; font-size: 11px; color: #666">
+        Earned: $<span id="earn0">...</span>
+      </div>
+    </div>
 
-<div style="border-top: 1px solid #999; padding: 12px 0;">
-  <div style="font-weight: bold; margin-bottom: 8px;"><span id="name1">Blake</span></div>
-  <div>Total Views: <span id="tv1">...</span></div>
-  <div>Total Subs: <span id="ts1">...</span></div>
-  <div>Today Views: <span id="vt1" style="color: #0066cc;">...</span></div>
-  <div>Today Subs: <span id="st1" style="color: #0066cc;">...</span></div>
-  <div style="margin-top: 4px; font-size: 11px; color: #666;">Earned: $<span id="earn1">...</span></div>
-</div>
+    <div style="border-top: 1px solid #999; padding: 12px 0">
+      <div style="font-weight: bold; margin-bottom: 8px">
+        <span id="name1">Blake</span>
+      </div>
+      <div>Total Views: <span id="tv1">...</span></div>
+      <div>Total Subs: <span id="ts1">...</span></div>
+      <div>Today Views: <span id="vt1" style="color: #0066cc">...</span></div>
+      <div>Today Subs: <span id="st1" style="color: #0066cc">...</span></div>
+      <div style="margin-top: 4px; font-size: 11px; color: #666">
+        Earned: $<span id="earn1">...</span>
+      </div>
+    </div>
 
-<div style="border-top: 1px solid #999; padding: 12px 0;">
-  <div style="font-weight: bold; margin-bottom: 8px;"><span id="name2">Mythic</span></div>
-  <div>Total Views: <span id="tv2">...</span></div>
-  <div>Total Subs: <span id="ts2">...</span></div>
-  <div>Today Views: <span id="vt2" style="color: #0066cc;">...</span></div>
-  <div>Today Subs: <span id="st2" style="color: #0066cc;">...</span></div>
-  <div style="margin-top: 4px; font-size: 11px; color: #666;">Earned: $<span id="earn2">...</span></div>
-</div>
+    <div style="border-top: 1px solid #999; padding: 12px 0">
+      <div style="font-weight: bold; margin-bottom: 8px">
+        <span id="name2">Mythic</span>
+      </div>
+      <div>Total Views: <span id="tv2">...</span></div>
+      <div>Total Subs: <span id="ts2">...</span></div>
+      <div>Today Views: <span id="vt2" style="color: #0066cc">...</span></div>
+      <div>Today Subs: <span id="st2" style="color: #0066cc">...</span></div>
+      <div style="margin-top: 4px; font-size: 11px; color: #666">
+        Earned: $<span id="earn2">...</span>
+      </div>
+    </div>
 
-<div style="border-top: 1px solid #999; padding: 12px 0;">
-  <div style="font-weight: bold; margin-bottom: 8px;"><span id="name3">Ender</span></div>
-  <div>Total Views: <span id="tv3">...</span></div>
-  <div>Total Subs: <span id="ts3">...</span></div>
-  <div>Today Views: <span id="vt3" style="color: #0066cc;">...</span></div>
-  <div>Today Subs: <span id="st3" style="color: #0066cc;">...</span></div>
-  <div style="margin-top: 4px; font-size: 11px; color: #666;">Earned: $<span id="earn3">...</span></div>
-</div>
+    <div style="border-top: 1px solid #999; padding: 12px 0">
+      <div style="font-weight: bold; margin-bottom: 8px">
+        <span id="name3">Ender</span>
+      </div>
+      <div>Total Views: <span id="tv3">...</span></div>
+      <div>Total Subs: <span id="ts3">...</span></div>
+      <div>Today Views: <span id="vt3" style="color: #0066cc">...</span></div>
+      <div>Today Subs: <span id="st3" style="color: #0066cc">...</span></div>
+      <div style="margin-top: 4px; font-size: 11px; color: #666">
+        Earned: $<span id="earn3">...</span>
+      </div>
+    </div>
 
-<script>
-  /* ══════════════════════════════════════════
+    <script>
+      /* ══════════════════════════════════════════
      CONFIG — API Key
      ══════════════════════════════════════════ */
-  const CONFIG = {
-    apiKey: 'AIzaSyBTnIm3Nje9W92CB46TZMrbBVPt_AF8YH0'
-  };
-  
-  let channelsData = [];
-  let historyData = {};
-  
-  async function loadHistory() {
-    try {
-      const response = await fetch('history.json');
-      const data = await response.json();
-      historyData = data;
-      channelsData = data.channels;
-      return channelsData;
-    } catch (err) {
-      console.error('Failed to load history.json:', err);
-      return [];
-    }
-  }
-
-  async function saveHistory() {
-    try {
-      const dataToSave = {
-        totalAccess: historyData.totalAccess || 0,
-        channels: channelsData
+      const CONFIG = {
+        apiKey: "AIzaSyBTnIm3Nje9W92CB46TZMrbBVPt_AF8YH0",
       };
-      // Send to server or update localStorage as backup
-      localStorage.setItem('yt_history_backup', JSON.stringify(dataToSave));
-      console.log('History backup saved to localStorage');
-    } catch (err) {
-      console.error('Failed to save history:', err);
-    }
-  }
-  /* ══════════════════════════════════════════ */
+      // FIREBASE_CONFIG: replace the placeholder values with your project's config
+      // Get this from Firebase console -> Project settings -> SDK setup
+      const FIREBASE_CONFIG = {
+        apiKey: "AIzaSyDMy_jUZpOkle-b6-f6UcG8tVXqKNiiVXE",
+        authDomain: "socialblade-8690c.firebaseapp.com",
+        databaseURL: "https://socialblade-8690c-default-rtdb.firebaseio.com",
+        projectId: "socialblade-8690c",
+        storageBucket: "socialblade-8690c.firebasestorage.app",
+        messagingSenderId: "286027013148",
+        appId: "1:286027013148:web:9021302b6ae0425953d3d9",
+      };
+      let db = null; // firebase database instance when initialized
 
-  const SNAP_KEY = 'yt_snap_v4';
-  const ACCESS_COUNTER_KEY = 'yt_access_counter';
+      let channelsData = [];
+      let historyData = {};
 
-  function todayStr() {
-    return new Date().toISOString().slice(0, 10);
-  }
-
-  function loadSnap() {
-    try { return JSON.parse(localStorage.getItem(SNAP_KEY)); }
-    catch { return null; }
-  }
-
-  // Save snapshot only once per day (first visit of the day)
-  function maybeSaveSnap(fresh) {
-    const snap = loadSnap();
-    if (!snap || snap.date !== todayStr()) {
-      localStorage.setItem(SNAP_KEY, JSON.stringify({ date: todayStr(), data: fresh }));
-    }
-  }
-
-  function fmt(n, showSign = false) {
-    if (n === null || n === undefined) return '—';
-    const s = Math.abs(n).toLocaleString();
-    if (!showSign) return s;
-    return (n >= 0 ? '+' : '-') + s;
-  }
-
-  async function fetchChannel(id, apiKey) {
-    const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${id}&key=${apiKey}`;
-    const res  = await fetch(url);
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-    if (!data.items?.length) throw new Error('Channel not found: ' + id);
-    const s = data.items[0].statistics;
-    return {
-      views: parseInt(s.viewCount, 10),
-      subs:  parseInt(s.subscriberCount, 10),
-    };
-  }
-
-  function incrementAccessCounter() {
-    let count = parseInt(localStorage.getItem(ACCESS_COUNTER_KEY) || '0', 10);
-    count++;
-    localStorage.setItem(ACCESS_COUNTER_KEY, count.toString());
-    return count;
-  }
-
-  async function run() {
-    const snap    = loadSnap();
-    const isNewDay = !snap || snap.date !== todayStr();
-    const fresh   = {};
-    let totDV = 0;
-
-    for (let i = 0; i < channelsData.length; i++) {
-      const ch = channelsData[i];
-      try {
-        const current = await fetchChannel(ch.id, CONFIG.apiKey);
-        fresh[ch.id]  = current;
-
-        // Calculate today's changes based on seed values
-        const viewsToday = current.views - ch.seed.views;
-        const subsToday = current.subs - ch.seed.subs;
-
-        // Update seed with today's changes
-        ch.seed.viewsToday = viewsToday;
-        ch.seed.subsToday = subsToday;
-        
-        // Update seed with new values
-        ch.seed.views = current.views;
-        ch.seed.subs = current.subs;
-
-        // Baseline: prefer localStorage snapshot; fall back to seed from history.json
-        const base = snap?.data?.[ch.id] ?? { views: current.views - viewsToday, subs: current.subs - subsToday };
-
-        const deltaV = current.views - base.views;
-        const deltaS = current.subs  - base.subs;
-
-        let displayDeltaV = deltaV;
-        if (deltaV === 0) {
-          const saved = localStorage.getItem('yt_delta_v4_' + ch.id);
-          if (saved) displayDeltaV = parseInt(saved);
-        } else {
-          localStorage.setItem('yt_delta_v4_' + ch.id, deltaV);
+      function fmtDateTime(iso) {
+        if (!iso) return "(none)";
+        try {
+          // Display the time in Japan Standard Time
+          return new Date(iso).toLocaleString("ja-JP", {
+            timeZone: "Asia/Tokyo",
+          });
+        } catch (e) {
+          return iso;
         }
-
-        let displayDeltaS = deltaS;
-        if (deltaS === 0) {
-          const saved = localStorage.getItem('yt_delta_s4_' + ch.id);
-          if (saved) displayDeltaS = parseInt(saved);
-        } else {
-          localStorage.setItem('yt_delta_s4_' + ch.id, deltaS);
-        }
-
-        // Display channel info
-        document.getElementById(`name${i}`).textContent = ch.name;
-        document.getElementById(`tv${i}`).textContent = fmt(current.views);
-        document.getElementById(`ts${i}`).textContent = fmt(current.subs);
-        document.getElementById(`vt${i}`).textContent = fmt(viewsToday, true);
-        document.getElementById(`st${i}`).textContent = fmt(subsToday, true);
-        
-        const earnedIndividual = Math.round((displayDeltaV * 6) / 1000);
-        document.getElementById(`earn${i}`).textContent = earnedIndividual;
-
-        totDV += displayDeltaV;
-
-      } catch (err) {
-        document.getElementById(`tv${i}`).textContent = 'error';
-        document.getElementById(`ts${i}`).textContent = 'error';
-        document.getElementById(`vt${i}`).textContent = 'error';
-        document.getElementById(`st${i}`).textContent = 'error';
-        document.getElementById(`earn${i}`).textContent = 'error';
-        console.error(ch.id, err.message);
       }
-    }
 
-    // Save snapshot — only overwrites when it's a new day
-    maybeSaveSnap(fresh);
+      // Return YYYY-MM-DD for current date in Japan Standard Time (UTC+9)
+      function jstDateStr() {
+        const now = new Date();
+        const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+        return jst.toISOString().slice(0, 10);
+      }
 
-    // Save updated seed values to history
-    await saveHistory();
+      async function loadHistory() {
+        // Try to initialize Firebase DB. If FIREBASE_CONFIG has not been filled,
+        // fall back to using the local history.json file.
+        try {
+          console.log("loadHistory: start");
+          // initialize firebase only if apiKey has been replaced
+          if (
+            FIREBASE_CONFIG &&
+            FIREBASE_CONFIG.apiKey &&
+            !FIREBASE_CONFIG.apiKey.startsWith("YOUR_") &&
+            typeof firebase !== "undefined"
+          ) {
+            try {
+              console.log("firebase not defined");
+              if (!firebase.apps.length)
+                firebase.initializeApp(FIREBASE_CONFIG);
+              db = firebase.database();
+            } catch (e) {
+              console.warn(
+                "Firebase init failed, falling back to history.json",
+                e,
+              );
+              db = null;
+            }
+          }
 
-    document.getElementById('totDV').textContent = fmt(totDV, true);
-    document.getElementById('totEarned').textContent = fmt((totDV * 6) / 1000, false);
-    const snapshotDate = snap ? snap.date : '2026-05-08';
-    const totalAccess = incrementAccessCounter();
-    document.getElementById('status').textContent =
-      'Last snapshot: ' + snapshotDate + ' · Total accesses: ' + totalAccess + ' · Updated: ' + new Date().toLocaleTimeString();
-  }
+          if (db) {
+            const snap = await db.ref("/history").once("value");
+            if (snap.exists()) {
+              console.log("loadHistory: reading /history from Firebase");
+              historyData = snap.val() || {};
+              console.log(
+                "loadHistory: historyData loaded from DB",
+                historyData,
+              );
+              // Normalize snapshotDateTime: if DB stored numeric server timestamp, convert to ISO and persist readable ISO
+              try {
+                const ts = historyData.snapshotDateTime;
+                if (ts != null) {
+                  if (
+                    typeof ts === "number" ||
+                    (typeof ts === "string" && /^\d+$/.test(ts))
+                  ) {
+                    const iso = new Date(Number(ts)).toISOString();
+                    historyData.snapshotDateTime = iso;
+                    // persist readable ISO back to DB so console shows a readable time
+                    try {
+                      await db.ref("/history/snapshotDateTime").set(iso);
+                      console.log(
+                        "loadHistory: converted snapshotDateTime to ISO and saved to DB",
+                        iso,
+                      );
+                    } catch (e) {
+                      console.warn(
+                        "loadHistory: failed to persist converted snapshotDateTime:",
+                        e,
+                      );
+                    }
+                  } else if (typeof ts === "string") {
+                    const parsed = new Date(ts);
+                    if (isNaN(parsed)) {
+                      console.warn(
+                        "loadHistory: snapshotDateTime in DB is invalid, clearing it:",
+                        ts,
+                      );
+                      historyData.snapshotDateTime = null;
+                      try {
+                        await db.ref("/history/snapshotDateTime").remove();
+                      } catch (e) {
+                        /* ignore */
+                      }
+                    }
+                  }
+                }
+              } catch (e) {
+                console.warn(
+                  "loadHistory: error normalizing snapshotDateTime",
+                  e,
+                );
+              }
+              // If DB only contains totalAccess (or channels missing/empty), seed channels from local history.json
+              if (
+                !Array.isArray(historyData.channels) ||
+                historyData.channels.length === 0
+              ) {
+                try {
+                  console.log(
+                    "loadHistory: DB missing channels; seeding from local history.json",
+                  );
+                  const response = await fetch("history.json");
+                  const localData = await response.json();
+                  historyData.channels = localData.channels || [];
+                  // ensure totalAccess is preserved (or default to 0)
+                  historyData.totalAccess =
+                    historyData.totalAccess || localData.totalAccess || 0;
+                  // persist full history back to DB so future reads have channels
+                  await db.ref("/history").set(historyData);
+                  console.log("loadHistory: seeded /history in DB");
+                  channelsData = historyData.channels;
+                  return channelsData;
+                } catch (e) {
+                  console.warn(
+                    "loadHistory: Failed to seed DB from local history.json:",
+                    e,
+                  );
+                  channelsData = [];
+                  return channelsData;
+                }
+              }
+              channelsData = historyData.channels || [];
+              return channelsData;
+            }
+            // If DB has no history, seed it from local history.json
+            console.log(
+              "loadHistory: /history node missing; seeding DB from local history.json",
+            );
+            const response = await fetch("history.json");
+            const data = await response.json();
+            historyData = data;
+            channelsData = data.channels || [];
+            await db.ref("/history").set(data);
+            console.log("loadHistory: seeded /history in DB");
+            return channelsData;
+          }
 
-  // Load history.json and run
-  (async () => {
-    await loadHistory();
-    run();
-  })();
-</script>
-</body>
+          // fallback: load from local history.json
+          const response = await fetch("history.json");
+          const data = await response.json();
+          historyData = data;
+          channelsData = data.channels || [];
+          return channelsData;
+        } catch (err) {
+          console.error("Failed to load history (firebase or local):", err);
+          return [];
+        }
+      }
+
+      async function saveHistory() {
+        try {
+          // Ensure historyData contains up-to-date channels and totalAccess
+          historyData = historyData || {};
+          historyData.channels = channelsData;
+          historyData.totalAccess = historyData.totalAccess || 0;
+
+          const dataToSave = historyData; // includes snapshotDate when present
+
+          console.log(
+            "saveHistory: saving historyData, snapshotDate=",
+            dataToSave.snapshotDate,
+            "snapshotDateTime=",
+            dataToSave.snapshotDateTime,
+          );
+          if (db) {
+            // Write full history object (including snapshotDate and snapshotDateTime) to /history
+            await db.ref("/history").set(dataToSave);
+            console.log(
+              "saveHistory: History saved to Firebase Realtime Database",
+            );
+          } else {
+            // Fallback: keep a local backup in localStorage
+            localStorage.setItem(
+              "yt_history_backup",
+              JSON.stringify(dataToSave),
+            );
+            console.log("History backup saved to localStorage");
+          }
+        } catch (err) {
+          console.error("Failed to save history:", err);
+        }
+      }
+      /* ══════════════════════════════════════════ */
+
+      const SNAP_KEY = "yt_snap_v4";
+      const ACCESS_COUNTER_KEY = "yt_access_counter";
+
+      function todayStr() {
+        return new Date().toISOString().slice(0, 10);
+      }
+
+      function loadSnap() {
+        try {
+          return JSON.parse(localStorage.getItem(SNAP_KEY));
+        } catch {
+          return null;
+        }
+      }
+
+      // Save snapshot only once per day (first visit of the day)
+      function maybeSaveSnap(fresh) {
+        const snap = loadSnap();
+        if (!snap || snap.date !== todayStr()) {
+          localStorage.setItem(
+            SNAP_KEY,
+            JSON.stringify({ date: todayStr(), data: fresh }),
+          );
+        }
+      }
+
+      function fmt(n, showSign = false) {
+        if (n === null || n === undefined) return "—";
+        const s = Math.abs(n).toLocaleString();
+        if (!showSign) return s;
+        return (n >= 0 ? "+" : "-") + s;
+      }
+
+      async function fetchChannel(id, apiKey) {
+        const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${id}&key=${apiKey}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        if (!data.items?.length) throw new Error("Channel not found: " + id);
+        const s = data.items[0].statistics;
+        return {
+          views: parseInt(s.viewCount, 10),
+          subs: parseInt(s.subscriberCount, 10),
+        };
+      }
+
+      function incrementAccessCounter() {
+        let count = parseInt(
+          localStorage.getItem(ACCESS_COUNTER_KEY) || "0",
+          10,
+        );
+        count++;
+        localStorage.setItem(ACCESS_COUNTER_KEY, count.toString());
+        return count;
+      }
+
+      async function run() {
+        const snap = loadSnap();
+        const fresh = {};
+        let totDV = 0;
+
+        // Use JST date for the daily check
+        const today = jstDateStr();
+        const isAlreadyUpdatedToday =
+          db && historyData && historyData.snapshotDate === today;
+
+        if (isAlreadyUpdatedToday) {
+          // Do not fetch again — use stored seed values and show the same "today" deltas as first run
+          for (let i = 0; i < channelsData.length; i++) {
+            const ch = channelsData[i];
+            try {
+              const seed = ch.seed || {};
+              const views = Number(seed.views || 0);
+              const subs = Number(seed.subs || 0);
+              const viewsToday = Number(seed.viewsToday || 0);
+              const subsToday = Number(seed.subsToday || 0);
+
+              document.getElementById(`name${i}`).textContent = ch.name;
+              document.getElementById(`tv${i}`).textContent = fmt(views);
+              document.getElementById(`ts${i}`).textContent = fmt(subs);
+              document.getElementById(`vt${i}`).textContent = fmt(
+                viewsToday,
+                true,
+              );
+              document.getElementById(`st${i}`).textContent = fmt(
+                subsToday,
+                true,
+              );
+
+              const earnedIndividual = Math.round((viewsToday * 6) / 1000);
+              document.getElementById(`earn${i}`).textContent =
+                earnedIndividual;
+
+              totDV += viewsToday;
+            } catch (err) {
+              document.getElementById(`tv${i}`).textContent = "error";
+              document.getElementById(`ts${i}`).textContent = "error";
+              document.getElementById(`vt${i}`).textContent = "error";
+              document.getElementById(`st${i}`).textContent = "error";
+              document.getElementById(`earn${i}`).textContent = "error";
+              console.error(ch.id, err && err.message);
+            }
+          }
+
+          // increment only totalAccess in DB and don't overwrite channels
+          try {
+            if (db) {
+              await db
+                .ref("/history/totalAccess")
+                .transaction((v) => (v || 0) + 1);
+              const totalSnap = await db
+                .ref("/history/totalAccess")
+                .once("value");
+              historyData.totalAccess = totalSnap.exists()
+                ? totalSnap.val()
+                : (historyData.totalAccess || 0) + 1;
+            } else {
+              historyData.totalAccess = (historyData.totalAccess || 0) + 1;
+            }
+          } catch (err) {
+            console.warn("Failed to increment totalAccess:", err);
+            historyData.totalAccess = (historyData.totalAccess || 0) + 1;
+          }
+        } else {
+          // First update of the day — fetch fresh stats and overwrite seeds, then persist
+          for (let i = 0; i < channelsData.length; i++) {
+            const ch = channelsData[i];
+            try {
+              const current = await fetchChannel(ch.id, CONFIG.apiKey);
+              fresh[ch.id] = current;
+
+              const prevViews = Number(ch.seed?.views || 0);
+              const prevSubs = Number(ch.seed?.subs || 0);
+              const viewsToday = current.views - prevViews;
+              const subsToday = current.subs - prevSubs;
+
+              ch.seed = ch.seed || {};
+              ch.seed.viewsToday = viewsToday;
+              ch.seed.subsToday = subsToday;
+              ch.seed.views = current.views;
+              ch.seed.subs = current.subs;
+
+              // store display deltas as before
+              let displayDeltaV = viewsToday;
+              if (displayDeltaV === 0) {
+                const saved = localStorage.getItem("yt_delta_v4_" + ch.id);
+                if (saved) displayDeltaV = parseInt(saved);
+              } else {
+                localStorage.setItem("yt_delta_v4_" + ch.id, displayDeltaV);
+              }
+
+              let displayDeltaS = subsToday;
+              if (displayDeltaS === 0) {
+                const saved = localStorage.getItem("yt_delta_s4_" + ch.id);
+                if (saved) displayDeltaS = parseInt(saved);
+              } else {
+                localStorage.setItem("yt_delta_s4_" + ch.id, displayDeltaS);
+              }
+
+              document.getElementById(`name${i}`).textContent = ch.name;
+              document.getElementById(`tv${i}`).textContent = fmt(
+                current.views,
+              );
+              document.getElementById(`ts${i}`).textContent = fmt(current.subs);
+              document.getElementById(`vt${i}`).textContent = fmt(
+                viewsToday,
+                true,
+              );
+              document.getElementById(`st${i}`).textContent = fmt(
+                subsToday,
+                true,
+              );
+
+              const earnedIndividual = Math.round((displayDeltaV * 6) / 1000);
+              document.getElementById(`earn${i}`).textContent =
+                earnedIndividual;
+
+              totDV += displayDeltaV;
+            } catch (err) {
+              document.getElementById(`tv${i}`).textContent = "error";
+              document.getElementById(`ts${i}`).textContent = "error";
+              document.getElementById(`vt${i}`).textContent = "error";
+              document.getElementById(`st${i}`).textContent = "error";
+              document.getElementById(`earn${i}`).textContent = "error";
+              console.error(ch.id, err && err.message);
+            }
+          }
+
+          // Save snapshot — only overwrites when it's a new day
+          maybeSaveSnap(fresh);
+
+          // Persist updated seeds and snapshotDate (first update of the day)
+          historyData.snapshotDate = today; // JST date string
+          historyData.channels = channelsData;
+          try {
+            if (db) {
+              console.log(
+                "run: writing channels and server timestamp to /history",
+              );
+              // Write channels and server timestamp (server timestamp is numeric ms)
+              await db.ref("/history").update({
+                channels: channelsData,
+                snapshotDate: today,
+                snapshotDateTime: firebase.database.ServerValue.TIMESTAMP,
+              });
+
+              // Increment totalAccess via transaction
+              await db
+                .ref("/history/totalAccess")
+                .transaction((v) => (v || 0) + 1);
+
+              // Wait for server timestamp to be populated (retry a few times)
+              const maxRetries = 8;
+              const delayMs = 250;
+              let tsVal = null;
+              for (let attempt = 0; attempt < maxRetries; attempt++) {
+                const tsSnap = await db
+                  .ref("/history/snapshotDateTime")
+                  .once("value");
+                if (tsSnap.exists()) {
+                  tsVal = tsSnap.val();
+                  console.log(
+                    "run: got snapshotDateTime from DB on attempt",
+                    attempt + 1,
+                    tsVal,
+                  );
+                  break;
+                }
+                console.log(
+                  "run: snapshotDateTime not yet set, retrying...",
+                  attempt + 1,
+                );
+                await new Promise((r) => setTimeout(r, delayMs));
+              }
+
+              // Read totalAccess
+              const totalSnap = await db
+                .ref("/history/totalAccess")
+                .once("value");
+              historyData.totalAccess = totalSnap.exists()
+                ? totalSnap.val()
+                : (historyData.totalAccess || 0) + 1;
+
+              if (tsVal) {
+                // convert server timestamp (ms) to ISO and persist back as ISO string
+                historyData.snapshotDateTime = new Date(
+                  Number(tsVal),
+                ).toISOString();
+                console.log(
+                  "run: snapshotDateTime from server (ms)=",
+                  tsVal,
+                  "converted ISO=",
+                  historyData.snapshotDateTime,
+                );
+                // write full history object (with ISO snapshotDateTime) so DB shows readable ISO string
+                await db.ref("/history").set(historyData);
+                console.log(
+                  "run: full history persisted with ISO snapshotDateTime",
+                );
+              } else {
+                // fallback: set snapshotDateTime using client ISO
+                historyData.snapshotDateTime = new Date().toISOString();
+                await db.ref("/history").set(historyData);
+                console.log(
+                  "run: persisted history with client snapshotDateTime (fallback)",
+                );
+              }
+            } else {
+              historyData.totalAccess = (historyData.totalAccess || 0) + 1;
+              historyData.snapshotDateTime = new Date().toISOString();
+              await saveHistory();
+            }
+          } catch (err) {
+            console.warn(
+              "Failed to persist history on first update of day:",
+              err,
+            );
+          }
+        }
+
+        // Aggregate totals
+        const viewsTodayTotal = totDV;
+        const revenueTodayTotal = Math.round((viewsTodayTotal * 6) / 1000);
+        // total views taken from stored seeds
+        const totalViews = channelsData.reduce(
+          (s, c) => s + Number(c.seed?.views || 0),
+          0,
+        );
+        const totalRevenue = Math.round((totalViews * 6) / 1000);
+
+        document.getElementById("todayViews").textContent = fmt(
+          viewsTodayTotal,
+          true,
+        );
+        document.getElementById("todayEarned").textContent = fmt(
+          revenueTodayTotal,
+          false,
+        );
+        document.getElementById("totalViews").textContent = fmt(
+          totalViews,
+          false,
+        );
+        document.getElementById("totalRevenue").textContent = fmt(
+          totalRevenue,
+          false,
+        );
+
+        const snapshotDate = historyData.snapshotDate || snap?.date || "(none)";
+        const snapshotDateTimeISO = historyData.snapshotDateTime || null;
+        const snapshotDateTimeDisplay = snapshotDateTimeISO
+          ? fmtDateTime(snapshotDateTimeISO)
+          : historyData.snapshotDate || snap?.date || "(none)";
+        const totalAccess = incrementAccessCounter();
+        console.log("run: finished.", {
+          snapshotDate,
+          snapshotDateTimeISO,
+          totalAccessLocal: totalAccess,
+          viewsTodayTotal,
+          revenueTodayTotal,
+          totalViews,
+          totalRevenue,
+        });
+        document.getElementById("status").textContent =
+          "Last snapshot: " +
+          snapshotDateTimeDisplay +
+          " · Total accesses: " +
+          totalAccess +
+          " · Updated: " +
+          new Date().toLocaleTimeString();
+      }
+
+      // Load history.json and run
+      (async () => {
+        await loadHistory();
+        run();
+      })();
+    </script>
+  </body>
 </html>
