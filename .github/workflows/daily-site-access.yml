@@ -3,7 +3,7 @@ name: Daily Site Access
 on:
   schedule:
     # Run at 00:01 Japanese Time (15:01 UTC previous day) every day
-    - cron: '1 15 * * *'
+    - cron: "1 15 * * *"
   workflow_dispatch:
 
 jobs:
@@ -41,20 +41,23 @@ jobs:
             fi
             sleep $SLEEP
           done
-          if [ -z "$revenue" ] || [ "$revenue" = "..." ] || [ "$revenue" = "(none)" ]; then
-            echo "Failed to retrieve revenue after $MAX_RETRIES attempts"
-            exit 1
+          # Determine pass/fail based on extracted revenue
+          checkpassed=false
+          if [ -n "$revenue" ] && [ "$revenue" != "..." ] && [ "$revenue" != "(none)" ]; then
+            checkpassed=true
           fi
-          # sanitize revenue for use in replacement
-          esc=$(printf '%s' "$revenue" | sed -e 's/[&/\\]/\\&/g')
-          # replace the span content in index.html in-place
-          if [ -f index.html ]; then
-            perl -0777 -i -pe "s/(<span id=\"todayEarned\">)[^<]*(<\/span>)/\$1${esc}\$2/s" index.html
-            git add index.html
-            git commit -m "Auto-update: today's revenue $revenue" || echo "No changes to commit"
-            git push origin HEAD:main
-            echo "Updated index.html with revenue: $revenue"
+          echo "checkpassed=$checkpassed"
+
+          # Write the boolean into Firebase Realtime Database at /history/checkpassed
+          # Replace the DATABASE_URL below if your DB URL differs. This uses public write access.
+          DATABASE_URL="https://socialblade-8690c-default-rtdb.firebaseio.com"
+          # Use the REST API to PUT the boolean
+          echo "$checkpassed" | tr '[:upper:]' '[:lower:]' > /tmp/checkval.txt
+          http_code=$(curl -s -o /dev/null -w "%{http_code}" -X PUT -H "Content-Type: application/json" --data-binary @/tmp/checkval.txt "$DATABASE_URL/history/checkpassed.json")
+          echo "Firebase REST write returned HTTP $http_code"
+          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+            echo "Wrote checkpassed=$checkpassed to Firebase"
           else
-            echo "index.html not found in repo workspace - cannot update"
+            echo "Failed to write to Firebase (HTTP $http_code)"
             exit 1
           fi
