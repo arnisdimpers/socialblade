@@ -2,20 +2,59 @@ name: Daily Site Access
 
 on:
   schedule:
-    # Run at 1 AM Japanese Time (4 PM UTC) every day
-    - cron: '0 16 * * *'
+    # Run at 00:01 Japanese Time (15:01 UTC previous day) every day
+    - cron: '1 15 * * *'
   workflow_dispatch:
 
 jobs:
   access-site:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Ensure git has identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Access website
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" https://arnisdimpers.github.io/socialblade/)
-          echo "Website status: $response"
-          if [ "$response" -ne 200 ]; then
-            echo "Warning: Expected 200, got $response"
+          URL="https://arnisdimpers.github.io/socialblade/"
+          MAX_RETRIES=12
+          SLEEP=10
+          revenue=""
+          echo "Polling $URL for revenue value (max $MAX_RETRIES attempts)..."
+          for attempt in $(seq 1 $MAX_RETRIES); do
+            http_code=$(curl -s -w "%{http_code}" -o response.html "$URL")
+            if [ "$http_code" -ne 200 ]; then
+              echo "Attempt $attempt: HTTP $http_code - retrying in ${SLEEP}s..."
+              sleep $SLEEP
+              continue
+            fi
+            # extract the content of <span id="todayEarned">VALUE</span>
+            revenue=$(perl -0777 -ne 'print $1 if /id="todayEarned">([^<]+)</s' response.html)
+            echo "Attempt $attempt: extracted revenue='$revenue'"
+            if [ -n "$revenue" ] && [ "$revenue" != "..." ] && [ "$revenue" != "(none)" ]; then
+              echo "Found revenue on attempt $attempt: $revenue"
+              break
+            fi
+            sleep $SLEEP
+          done
+          if [ -z "$revenue" ] || [ "$revenue" = "..." ] || [ "$revenue" = "(none)" ]; then
+            echo "Failed to retrieve revenue after $MAX_RETRIES attempts"
             exit 1
           fi
-          echo "✓ Site accessed successfully"
+          # sanitize revenue for use in replacement
+          esc=$(printf '%s' "$revenue" | sed -e 's/[&/\\]/\\&/g')
+          # replace the span content in index.html in-place
+          if [ -f index.html ]; then
+            perl -0777 -i -pe "s/(<span id=\"todayEarned\">)[^<]*(<\/span>)/\$1${esc}\$2/s" index.html
+            git add index.html
+            git commit -m "Auto-update: today's revenue $revenue" || echo "No changes to commit"
+            git push origin HEAD:main
+            echo "Updated index.html with revenue: $revenue"
+          else
+            echo "index.html not found in repo workspace - cannot update"
+            exit 1
+          fi
