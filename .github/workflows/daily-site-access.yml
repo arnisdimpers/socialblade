@@ -2,8 +2,8 @@ name: Daily Site Access
 
 on:
   schedule:
-    # Run at 00:01 Japanese Time (15:01 UTC previous day) every day
-    - cron: "1 15 * * *"
+    # Run at 18:55 Japanese Time (09:55 UTC) every day
+    - cron: "55 9 * * *"
   workflow_dispatch:
 
 jobs:
