@@ -20,46 +20,27 @@ jobs:
 
       - name: Load site 4 times and wait for completion
         run: |
+          set -euo pipefail
           URL="https://arnisdimpers.github.io/socialblade/"
           ITER=4
-          # per-visit polling: try up to 15 times, 1s apart, to detect page finished
-          MAX_POLL=15
-          POLL_DELAY=1
+          # install node and playwright
+          curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+          apt-get install -y nodejs
+          npm ci --silent || true
+          npm install --no-audit --no-fund playwright@1.38.0
+
           for i in $(seq 1 $ITER); do
-            echo "--- Visit $i of $ITER ---"
-            success=false
-            for attempt in $(seq 1 $MAX_POLL); do
-              http_code=$(curl -s -w "%{http_code}" -o response.html "$URL")
-              if [ "$http_code" -ne 200 ]; then
-                echo "Attempt $attempt: HTTP $http_code - retrying in ${POLL_DELAY}s..."
-                sleep $POLL_DELAY
-                continue
-              fi
-              # check if the status element indicates the run finished
-              if grep -q "Last snapshot:" response.html; then
-                echo "Attempt $attempt: page indicates finished (found 'Last snapshot:')"
-                success=true
-                break
-              fi
-              echo "Attempt $attempt: page not ready yet - retrying in ${POLL_DELAY}s..."
-              sleep $POLL_DELAY
-            done
-            if [ "$success" = true ]; then
-              echo "Page finished; wait ~20s then close this visit"
-              sleep 20
-                # record the successful visit to Firebase Realtime Database via REST API
-                DATABASE_URL="https://socialblade-8690c-default-rtdb.firebaseio.com"
-                ISO_TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-                MS_TS=$(($(date +%s) * 1000))
-                echo "Recording visit $i at $ISO_TS to Firebase"
-                # write a readable lastRun timestamp
-                curl -s -X PUT -H "Content-Type: application/json" -d "\"${ISO_TS}\"" "$DATABASE_URL/history/lastRun.json" || true
-                # write a per-run object for traceability
-                curl -s -X PUT -H "Content-Type: application/json" -d "{\"visit\":${i},\"status\":\"success\",\"ts\":${MS_TS}}" "$DATABASE_URL/history/runs/${MS_TS}.json" || true
-              else
-              echo "Visit $i: page did not indicate completion after ${MAX_POLL}s"
-              exit 1
-            fi
-            # short pause before next visit
+            echo "--- Playwright visit $i of $ITER ---"
+            # run the playwright script (it will exit non-zero if page didn't indicate ready)
+            node .github/scripts/playwright-run.js "$URL" 15 1
+
+            # record the successful visit to Firebase Realtime Database via REST API
+            DATABASE_URL="https://socialblade-8690c-default-rtdb.firebaseio.com"
+            ISO_TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+            MS_TS=$(($(date +%s) * 1000))
+            echo "Recording visit $i at $ISO_TS to Firebase"
+            curl -s -X PUT -H "Content-Type: application/json" -d "\"${ISO_TS}\"" "$DATABASE_URL/history/lastRun.json" || true
+            curl -s -X PUT -H "Content-Type: application/json" -d "{\"visit\":${i},\"status\":\"success\",\"ts\":${MS_TS}}" "$DATABASE_URL/history/runs/${MS_TS}.json" || true
+
             sleep 1
           done
