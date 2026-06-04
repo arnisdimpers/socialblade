@@ -45,8 +45,8 @@ jobs:
               sleep $POLL_DELAY
             done
             if [ "$success" = true ]; then
-              echo "Page finished; wait ~10s then close this visit"
-              sleep 10
+              echo "Page finished; wait ~20s then close this visit"
+              sleep 20
                 # record the successful visit to Firebase Realtime Database via REST API
                 DATABASE_URL="https://socialblade-8690c-default-rtdb.firebaseio.com"
                 ISO_TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
