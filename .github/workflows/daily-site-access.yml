@@ -21,7 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "20"
 
       - name: Load site 4 times and wait for completion
         run: |
@@ -31,6 +31,8 @@ jobs:
 
           # install Playwright locally (no apt usage)
           npm install --no-audit --no-fund playwright@1.38.0
+          # download Playwright browsers
+          npx playwright install
 
           for i in $(seq 1 $ITER); do
             echo "--- Playwright visit $i of $ITER ---"
