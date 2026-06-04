@@ -18,39 +18,39 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-        - name: Load site 4 times and wait for completion
-          run: |
-            URL="https://arnisdimpers.github.io/socialblade/"
-            ITER=4
-            # per-visit polling: try up to 15 times, 1s apart, to detect page finished
-            MAX_POLL=15
-            POLL_DELAY=1
-            for i in $(seq 1 $ITER); do
-              echo "--- Visit $i of $ITER ---"
-              success=false
-              for attempt in $(seq 1 $MAX_POLL); do
-                http_code=$(curl -s -w "%{http_code}" -o response.html "$URL")
-                if [ "$http_code" -ne 200 ]; then
-                  echo "Attempt $attempt: HTTP $http_code - retrying in ${POLL_DELAY}s..."
-                  sleep $POLL_DELAY
-                  continue
-                fi
-                # check if the status element indicates the run finished
-                if grep -q "Last snapshot:" response.html; then
-                  echo "Attempt $attempt: page indicates finished (found 'Last snapshot:')"
-                  success=true
-                  break
-                fi
-                echo "Attempt $attempt: page not ready yet - retrying in ${POLL_DELAY}s..."
+      - name: Load site 4 times and wait for completion
+        run: |
+          URL="https://arnisdimpers.github.io/socialblade/"
+          ITER=4
+          # per-visit polling: try up to 15 times, 1s apart, to detect page finished
+          MAX_POLL=15
+          POLL_DELAY=1
+          for i in $(seq 1 $ITER); do
+            echo "--- Visit $i of $ITER ---"
+            success=false
+            for attempt in $(seq 1 $MAX_POLL); do
+              http_code=$(curl -s -w "%{http_code}" -o response.html "$URL")
+              if [ "$http_code" -ne 200 ]; then
+                echo "Attempt $attempt: HTTP $http_code - retrying in ${POLL_DELAY}s..."
                 sleep $POLL_DELAY
-              done
-              if [ "$success" = true ]; then
-                echo "Page finished; wait ~10s then close this visit"
-                sleep 10
-              else
-                echo "Visit $i: page did not indicate completion after ${MAX_POLL}s"
-                exit 1
+                continue
               fi
-              # short pause before next visit
-              sleep 1
+              # check if the status element indicates the run finished
+              if grep -q "Last snapshot:" response.html; then
+                echo "Attempt $attempt: page indicates finished (found 'Last snapshot:')"
+                success=true
+                break
+              fi
+              echo "Attempt $attempt: page not ready yet - retrying in ${POLL_DELAY}s..."
+              sleep $POLL_DELAY
             done
+            if [ "$success" = true ]; then
+              echo "Page finished; wait ~10s then close this visit"
+              sleep 10
+            else
+              echo "Visit $i: page did not indicate completion after ${MAX_POLL}s"
+              exit 1
+            fi
+            # short pause before next visit
+            sleep 1
+          done
