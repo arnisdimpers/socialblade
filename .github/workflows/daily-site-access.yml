@@ -18,15 +18,18 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
       - name: Load site 4 times and wait for completion
         run: |
           set -euo pipefail
           URL="https://arnisdimpers.github.io/socialblade/"
           ITER=4
-          # install node and playwright
-          curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-          apt-get install -y nodejs
-          npm ci --silent || true
+
+          # install Playwright locally (no apt usage)
           npm install --no-audit --no-fund playwright@1.38.0
 
           for i in $(seq 1 $ITER); do
