@@ -2,8 +2,8 @@ name: Daily Site Access
 
 on:
   schedule:
-    # Run at 18:55 Japanese Time (09:55 UTC) every day
-    - cron: "55 9 * * *"
+    # Run at 00:01 Japanese Time (15:01 UTC previous day) every day
+    - cron: "1 15 * * *"
   workflow_dispatch:
 
 jobs:
@@ -18,46 +18,39 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Access website
-        run: |
-          URL="https://arnisdimpers.github.io/socialblade/"
-          MAX_RETRIES=12
-          SLEEP=10
-          revenue=""
-          echo "Polling $URL for revenue value (max $MAX_RETRIES attempts)..."
-          for attempt in $(seq 1 $MAX_RETRIES); do
-            http_code=$(curl -s -w "%{http_code}" -o response.html "$URL")
-            if [ "$http_code" -ne 200 ]; then
-              echo "Attempt $attempt: HTTP $http_code - retrying in ${SLEEP}s..."
-              sleep $SLEEP
-              continue
-            fi
-            # extract the content of <span id="todayEarned">VALUE</span>
-            revenue=$(perl -0777 -ne 'print $1 if /id="todayEarned">([^<]+)</s' response.html)
-            echo "Attempt $attempt: extracted revenue='$revenue'"
-            if [ -n "$revenue" ] && [ "$revenue" != "..." ] && [ "$revenue" != "(none)" ]; then
-              echo "Found revenue on attempt $attempt: $revenue"
-              break
-            fi
-            sleep $SLEEP
-          done
-          # Determine pass/fail based on extracted revenue
-          checkpassed=false
-          if [ -n "$revenue" ] && [ "$revenue" != "..." ] && [ "$revenue" != "(none)" ]; then
-            checkpassed=true
-          fi
-          echo "checkpassed=$checkpassed"
-
-          # Write the boolean into Firebase Realtime Database at /history/checkpassed
-          # Replace the DATABASE_URL below if your DB URL differs. This uses public write access.
-          DATABASE_URL="https://socialblade-8690c-default-rtdb.firebaseio.com"
-          # Use the REST API to PUT the boolean
-          echo "$checkpassed" | tr '[:upper:]' '[:lower:]' > /tmp/checkval.txt
-          http_code=$(curl -s -o /dev/null -w "%{http_code}" -X PUT -H "Content-Type: application/json" --data-binary @/tmp/checkval.txt "$DATABASE_URL/history/checkpassed.json")
-          echo "Firebase REST write returned HTTP $http_code"
-          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
-            echo "Wrote checkpassed=$checkpassed to Firebase"
-          else
-            echo "Failed to write to Firebase (HTTP $http_code)"
-            exit 1
-          fi
+        - name: Load site 4 times and wait for completion
+          run: |
+            URL="https://arnisdimpers.github.io/socialblade/"
+            ITER=4
+            # per-visit polling: try up to 15 times, 1s apart, to detect page finished
+            MAX_POLL=15
+            POLL_DELAY=1
+            for i in $(seq 1 $ITER); do
+              echo "--- Visit $i of $ITER ---"
+              success=false
+              for attempt in $(seq 1 $MAX_POLL); do
+                http_code=$(curl -s -w "%{http_code}" -o response.html "$URL")
+                if [ "$http_code" -ne 200 ]; then
+                  echo "Attempt $attempt: HTTP $http_code - retrying in ${POLL_DELAY}s..."
+                  sleep $POLL_DELAY
+                  continue
+                fi
+                # check if the status element indicates the run finished
+                if grep -q "Last snapshot:" response.html; then
+                  echo "Attempt $attempt: page indicates finished (found 'Last snapshot:')"
+                  success=true
+                  break
+                fi
+                echo "Attempt $attempt: page not ready yet - retrying in ${POLL_DELAY}s..."
+                sleep $POLL_DELAY
+              done
+              if [ "$success" = true ]; then
+                echo "Page finished; wait ~10s then close this visit"
+                sleep 10
+              else
+                echo "Visit $i: page did not indicate completion after ${MAX_POLL}s"
+                exit 1
+              fi
+              # short pause before next visit
+              sleep 1
+            done
