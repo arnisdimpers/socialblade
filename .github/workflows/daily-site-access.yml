@@ -47,7 +47,16 @@ jobs:
             if [ "$success" = true ]; then
               echo "Page finished; wait ~10s then close this visit"
               sleep 10
-            else
+                # record the successful visit to Firebase Realtime Database via REST API
+                DATABASE_URL="https://socialblade-8690c-default-rtdb.firebaseio.com"
+                ISO_TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+                MS_TS=$(($(date +%s) * 1000))
+                echo "Recording visit $i at $ISO_TS to Firebase"
+                # write a readable lastRun timestamp
+                curl -s -X PUT -H "Content-Type: application/json" -d "\"${ISO_TS}\"" "$DATABASE_URL/history/lastRun.json" || true
+                # write a per-run object for traceability
+                curl -s -X PUT -H "Content-Type: application/json" -d "{\"visit\":${i},\"status\":\"success\",\"ts\":${MS_TS}}" "$DATABASE_URL/history/runs/${MS_TS}.json" || true
+              else
               echo "Visit $i: page did not indicate completion after ${MAX_POLL}s"
               exit 1
             fi
